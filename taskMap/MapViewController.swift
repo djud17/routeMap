@@ -89,7 +89,10 @@ final class MapViewController: UIViewController {
     }
     
     @objc private func addAdressButtonTapped(_ sender: UIButton) {
-        print("add adress")
+        presentAlertController(title: "Add",
+                               placeholder: "Please type an adress") { text in
+            print(text)
+        }
     }
     
     @objc private func resetButtonTapped(_ sender: UIButton) {
@@ -98,5 +101,26 @@ final class MapViewController: UIViewController {
     
     @objc private func routeButtonTapped(_ sender: UIButton) {
         print("route")
+    }
+    
+    private func presentAlertController(title: String,
+                                        placeholder: String,
+                                        completionHandler: @escaping (String) -> Void) {
+        let alertController = UIAlertController(title: title, message: nil, preferredStyle: .alert)
+        let alertOkButton = UIAlertAction(title: "OK", style: .default) { _ in
+            let textField = alertController.textFields?.first
+            guard let text = textField?.text else { return }
+            completionHandler(text)
+        }
+        let alertCancelButton = UIAlertAction(title: "Cancel", style: .cancel) {_ in
+            
+        }
+        alertController.addTextField { textField in
+            textField.placeholder = placeholder
+        }
+        
+        alertController.addAction(alertCancelButton)
+        alertController.addAction(alertOkButton)
+        present(alertController, animated: true)
     }
 }
