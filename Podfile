@@ -8,5 +8,6 @@ target 'taskMap' do
   # Pods for taskMap
 
 pod 'SnapKit'
+pod 'SwiftLint' 
 
 end

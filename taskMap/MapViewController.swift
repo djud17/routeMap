@@ -62,7 +62,7 @@ final class MapViewController: UIViewController {
         view.addSubview(mapView)
         mapView.addSubview(navigationView)
         navigationView.addSubview(stackViewButton)
-        [addAdressButton, routeButton, resetButton].forEach{stackViewButton.addArrangedSubview($0)}
+        [addAdressButton, routeButton, resetButton].forEach { stackViewButton.addArrangedSubview($0) }
         
         mapView.snp.makeConstraints { make in
             make.top.leading.trailing.bottom.equalToSuperview()
@@ -98,9 +98,8 @@ final class MapViewController: UIViewController {
     
     @objc private func addAdressButtonTapped(_ sender: UIButton) {
         alertController.createAddAlertController(title: "Add",
-                               placeholder: "Please type an adress") { [self] text in
-            print(text)
-            setupPlacemark(adressPlace: text)
+                                                 placeholder: "Please type an adress") { [weak self] text in
+            self?.setupPlacemark(adressPlace: text)
         }
         present(alertController.addingAlertController, animated: true)
     }
@@ -108,7 +107,7 @@ final class MapViewController: UIViewController {
     @objc private func resetButtonTapped(_ sender: UIButton) {
         mapView.removeOverlays(mapView.overlays)
         mapView.removeAnnotations(mapView.annotations)
-        annotationsArray.removeAll()
+        annotationsArray = []
         isAdressAdded = false
     }
     
@@ -122,10 +121,14 @@ final class MapViewController: UIViewController {
     
     private func setupPlacemark(adressPlace: String) {
         let geocoder = CLGeocoder()
-        geocoder.geocodeAddressString(adressPlace) { [self] (placemarks, error) in
+        geocoder.geocodeAddressString(adressPlace) {[weak self] (placemarks, error) in
             if let error = error {
-                alertController.createErrorAlertController(title: "Error", message: "\(error.localizedDescription) - Please try again!")
-                present(alertController.errorAlertController, animated: true)
+                let message = "\(error.localizedDescription) - Please try again!"
+                self?.alertController.createErrorAlertController(title: "Error",
+                                                                 message: message)
+                if let errorController = self?.alertController.errorAlertController {
+                    self?.present(errorController, animated: true)
+                }
             } else {
                 guard let placemarks = placemarks else { return }
                 let placemark = placemarks.first
@@ -136,13 +139,15 @@ final class MapViewController: UIViewController {
                 guard let placemarkLocation = placemark?.location else { return }
                 annotation.coordinate = placemarkLocation.coordinate
                 
-                annotationsArray.append(annotation)
+                self?.annotationsArray.append(annotation)
                 
-                if annotationsArray.count > 2 {
-                    isAdressAdded = true
+                if let annotationsArray = self?.annotationsArray {
+                    if annotationsArray.count > 2 {
+                        self?.isAdressAdded = true
+                    }
+                    
+                    self?.mapView.showAnnotations(annotationsArray, animated: true)
                 }
-                
-                mapView.showAnnotations(annotationsArray, animated: true)
             }
         }
     }
@@ -159,15 +164,23 @@ final class MapViewController: UIViewController {
         request.requestsAlternateRoutes = true
         
         let direction = MKDirections(request: request)
-        direction.calculate { [self] (response, error) in
+        direction.calculate {[weak self] (response, error) in
             if let error = error {
-                alertController.createErrorAlertController(title: "Error", message: "\(error.localizedDescription) - Please try again!")
-                present(alertController.errorAlertController, animated: true)
+                let message = "\(error.localizedDescription) - Please try again!"
+                self?.alertController.createErrorAlertController(title: "Error",
+                                                                 message: message)
+                if let errorController = self?.alertController.errorAlertController {
+                    self?.present(errorController, animated: true)
+                }
             }
             
             guard let response = response else {
-                alertController.createErrorAlertController(title: "Error", message: "Route is not acailable - Please try again!")
-                present(alertController.errorAlertController, animated: true)
+                let message = "Route is not available - Please try again!"
+                self?.alertController.createErrorAlertController(title: "Error",
+                                                                 message: message)
+                if let errorController = self?.alertController.errorAlertController {
+                    self?.present(errorController, animated: true)
+                }
                 return
             }
             
@@ -177,14 +190,14 @@ final class MapViewController: UIViewController {
                     minimalRoute = route
                 }
             }
-            mapView.addOverlay(minimalRoute.polyline)
+            self?.mapView.addOverlay(minimalRoute.polyline)
         }
     }
 }
 
 extension MapViewController: MKMapViewDelegate {
     func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        let renderer = MKPolylineRenderer(polyline: overlay as! MKPolyline)
+        let renderer = MKPolylineRenderer(polyline: overlay as? MKPolyline ?? MKPolyline())
         renderer.strokeColor = .red
         return renderer
     }
