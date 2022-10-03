@@ -25,20 +25,24 @@ final class MapViewController: UIViewController {
     }()
     
     private lazy var addAdressButton: UIButton = {
-        let button = createButton()
+        let button = createButton(nil)
         button.setTitle("Add adress", for: .normal)
+        button.addTarget(self, action: #selector(addAdressButtonTapped), for: .touchUpInside)
         return button
     }()
     private lazy var routeButton: UIButton = {
-        let button = createButton()
+        let button = createButton(false)
         button.setTitle("Route", for: .normal)
+        button.addTarget(self, action: #selector(routeButtonTapped), for: .touchUpInside)
         return button
     }()
     private lazy var resetButton: UIButton = {
-        let button = createButton()
+        let button = createButton(false)
         button.setTitle("Reset", for: .normal)
+        button.addTarget(self, action: #selector(resetButtonTapped), for: .touchUpInside)
         return button
     }()
+    private var isAdressAdded = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,9 +55,7 @@ final class MapViewController: UIViewController {
         view.addSubview(mapView)
         mapView.addSubview(navigationView)
         navigationView.addSubview(stackViewButton)
-        stackViewButton.addArrangedSubview(addAdressButton)
-        stackViewButton.addArrangedSubview(routeButton)
-        stackViewButton.addArrangedSubview(resetButton)
+        [addAdressButton, routeButton, resetButton].forEach{stackViewButton.addArrangedSubview($0)}
         
         mapView.snp.makeConstraints { make in
             make.top.leading.trailing.bottom.equalToSuperview()
@@ -70,14 +72,31 @@ final class MapViewController: UIViewController {
         }
     }
     
-    private func createButton() -> UIButton {
+    private func createButton(_ isEnabled: Bool?) -> UIButton {
         let button = UIButton()
-        button.setTitleColor(.red, for: .normal)
+        var color: UIColor = .red
+        if let isEnabled = isEnabled {
+            color = .lightGray
+            button.isEnabled = isEnabled
+        }
+        button.setTitleColor(color, for: .normal)
         button.setTitleColor(.lightGray, for: .highlighted)
         button.backgroundColor = .white
         button.layer.cornerRadius = 10
-        button.layer.borderColor = UIColor.red.cgColor
+        button.layer.borderColor = color.cgColor
         button.layer.borderWidth = 2
         return button
+    }
+    
+    @objc private func addAdressButtonTapped(_ sender: UIButton) {
+        print("add adress")
+    }
+    
+    @objc private func resetButtonTapped(_ sender: UIButton) {
+        print("reset")
+    }
+    
+    @objc private func routeButtonTapped(_ sender: UIButton) {
+        print("route")
     }
 }
